@@ -27,6 +27,7 @@ import { api } from "@/src/shared/context/trpc-context";
 import { DateRangePicker } from "@/src/shared/components/global/date-picker";
 import { useModal } from "@/src/shared/context/modal-context";
 import { CreateDocumentGroupModal } from "./create-document-group-modal";
+import { useSelectedCompany } from "@/src/shared/context/company-context";
 
 interface DocumentModalData {
   onSuccess: () => void;
@@ -54,6 +55,7 @@ export function DocumentFormModal({
   onClose,
   data,
 }: ModalProps<DocumentModalData>) {
+  const { selectedCompanyId } = useSelectedCompany();
   const [attachments, setAttachments] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
@@ -63,24 +65,33 @@ export function DocumentFormModal({
 
   const { data: templatesData, isLoading: templatesLoading } = api.documentTemplate.list.useQuery({
     page: 1,
-    pageSize: 100
+    pageSize: 100,
+    companyId: selectedCompanyId || undefined,
   });
   const { data: orgaosData, isLoading: orgaosLoading } = api.organization.list.useQuery({
     page: 1,
-    pageSize: 100
+    pageSize: 100,
+    companyId: selectedCompanyId || undefined,
   });
   const { data: companiesData, isLoading: companiesLoading } = api.company.list.useQuery({
     page: 1,
-    pageSize: 100
+    pageSize: 100,
+    companyId: selectedCompanyId || undefined,
   });
   const { data: establishmentsData, isLoading: establishmentsLoading } = api.establishment.list.useQuery({
     page: 1,
-    pageSize: 100
+    pageSize: 100,
+    companyId: selectedCompanyId || undefined,
   });
-  const { data: usersData, isLoading: usersLoading } = api.access.listUsers.useQuery();
+  
+  const { data: usersData, isLoading: usersLoading } = api.access.listUsers.useQuery({
+    companyId: selectedCompanyId || undefined,
+  });
+
   const { data: groupsData, isLoading: groupsLoading, refetch: refetchGroups } = api.documentGroup.list.useQuery({
     page: 1,
     pageSize: 100,
+    companyId: selectedCompanyId || undefined,
   });
 
   const templates = templatesData?.templates || [];

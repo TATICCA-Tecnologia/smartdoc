@@ -45,10 +45,11 @@ export const documentTemplateRouter = router({
         pageSize: z.number().default(20),
         search: z.string().optional(),
         isDefault: z.boolean().optional(),
+        companyId: z.string().optional(),
       })
     )
     .query(async ({ ctx, input }) => {
-      const { page, pageSize, search, isDefault } = input;
+      const { page, pageSize, search, isDefault, companyId } = input;
       const skip = (page - 1) * pageSize;
 
       const where = {
@@ -63,7 +64,14 @@ export const documentTemplateRouter = router({
 
       const [templates, total] = await Promise.all([
         ctx.prisma.documentTemplate.findMany({
-          where,
+          where: {
+            ...where,
+            documents: {
+              every: {
+                companyId: companyId,
+              }
+            }
+          },
           skip,
           take: pageSize,
           orderBy: { createdAt: "desc" },

@@ -324,6 +324,7 @@ export const documentRouter = router({
     .input(
       z.object({
         days: z.number().default(30),
+        companyId: z.string().optional(),
       })
     )
     .query(async ({ ctx, input }) => {
@@ -334,6 +335,7 @@ export const documentRouter = router({
       const documents = await ctx.prisma.document.findMany({
         where: {
           status: "ACTIVE",
+          ...(input.companyId && { companyId: input.companyId }),
           expirationDate: {
             gte: today,
             lte: futureDate,

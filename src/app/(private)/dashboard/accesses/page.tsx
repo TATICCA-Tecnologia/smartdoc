@@ -14,6 +14,7 @@ const TIPOS_ACESSO_DESCRICOES: { nome: string; descricao: string }[] = [
 ];
 
 function AccessesPageContent() {
+  
   const { 
     table, 
     isLoading, 
@@ -22,7 +23,6 @@ function AccessesPageContent() {
     searchQuery,
     setSearchQuery,
     handleOpenNewAccess, 
-    handleEditAccess,
   } = useAccessesPage();
 
   if (isLoading) {

@@ -28,10 +28,11 @@ export const organizationRouter = router({
         search: z.string().optional(),
         type: z.enum(["FEDERAL", "ESTADUAL", "MUNICIPAL", "OUTROS"]).optional(),
         status: z.enum(["ACTIVE", "INACTIVE"]).optional(),
+        companyId: z.string().optional(),
       })
     )
     .query(async ({ ctx, input }) => {
-      const { page, pageSize, search, type, status } = input;
+      const { page, pageSize, search, type, status, companyId } = input;
       const skip = (page - 1) * pageSize;
 
       const where = {
@@ -47,7 +48,14 @@ export const organizationRouter = router({
 
       const [organizations, total] = await Promise.all([
         ctx.prisma.organization.findMany({
-          where,
+          where: {
+            ...where,
+            documents: {
+              every: {
+                companyId: companyId,
+              }
+            }
+          },
           skip,
           take: pageSize,
           orderBy: { createdAt: "desc" },

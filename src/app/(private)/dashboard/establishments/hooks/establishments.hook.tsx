@@ -16,12 +16,11 @@ export function useEstablishmentsPage() {
   const { data, isLoading, error, refetch } = api.establishment.list.useQuery({
     page: 1,
     pageSize: 50,
-    ...(selectedCompanyId ? { companyId: selectedCompanyId } : {}),
+    companyId: selectedCompanyId || undefined,
   });
 
   const establishments = data?.establishments || [];
 
-  // Mapear dados para formato da tabela
   const tableData = useMemo(() => establishments.map((est: any) => ({
     id: est.id,
     name: est.name,

@@ -14,9 +14,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { hasNoCompany } = useUserCompanies();
 
   return (
-    <CompanyProvider>
-      <SidebarProvider>
-        <BreadcrumbProvider>
+    <SidebarProvider>
+      <BreadcrumbProvider>
         <AppSidebar />
         <SidebarInset className="max-h-full overflow-hidden">
           <header className="flex h-16 shrink-0 items-center gap-2">
@@ -36,7 +35,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </SidebarInset>
         {/* <GlobalLoading /> */}
       </BreadcrumbProvider>
-      </SidebarProvider>
-    </CompanyProvider>
+    </SidebarProvider>
   );
 }

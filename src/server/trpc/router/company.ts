@@ -20,12 +20,13 @@ export const companyRouter = router({
       z.object({
         page: z.number().default(1),
         pageSize: z.number().default(10),
+        companyId: z.string().optional(),
         search: z.string().optional(),
         status: z.enum(["ACTIVE", "INACTIVE"]).optional(),
       })
     )
     .query(async ({ ctx, input }) => {
-      const { page, pageSize, search, status } = input;
+      const { page, pageSize, search, status, companyId } = input;
       const skip = (page - 1) * pageSize;
 
       const where = {
@@ -36,6 +37,7 @@ export const companyRouter = router({
           ],
         }),
         ...(status && { status }),
+        ...(companyId && { id: companyId }),
       };
 
       const [companies, total] = await Promise.all([

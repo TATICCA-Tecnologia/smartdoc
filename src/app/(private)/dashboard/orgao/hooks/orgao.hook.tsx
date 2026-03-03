@@ -6,13 +6,15 @@ import { getOrgaoColumns } from "../_components/columns";
 import { useModal } from "@/src/shared/context/modal-context";
 import { OrgaoModal } from "../_components/orgao-form";
 import { api } from "@/src/shared/context/trpc-context";
+import { useSelectedCompany } from "@/src/shared/context/company-context";
 
 export function useOrgaoPage() {
   const { openModal } = useModal();
-
+  const { selectedCompanyId } = useSelectedCompany();
   const { data, isLoading, error, refetch } = api.organization.list.useQuery({
     page: 1,
     pageSize: 50,
+    companyId: selectedCompanyId || undefined,
   });
 
   const organizations = data?.organizations || [];

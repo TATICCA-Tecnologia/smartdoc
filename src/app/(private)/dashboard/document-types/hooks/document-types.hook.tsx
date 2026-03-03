@@ -7,15 +7,18 @@ import { useMemo, useCallback, useState } from "react";
 import { useDataTable } from "@/src/shared/hook/use-data-table";
 import { createColumns } from "../_components/columns";
 import { ColumnDef } from "@tanstack/react-table";
+import { useSelectedCompany } from "@/src/shared/context/company-context";
 
 export function useDocumentTypesPage() {
   const { openModal } = useModal();
+  const { selectedCompanyId } = useSelectedCompany();
   const [searchQuery, setSearchQuery] = useState("");
 
   // Buscar templates do banco
   const { data: templatesData, isLoading, refetch } = api.documentTemplate.list.useQuery({
     page: 1,
     pageSize: 100,
+    companyId: selectedCompanyId || undefined,
   });
 
   const deleteMutation = api.documentTemplate.delete.useMutation();
@@ -27,10 +30,10 @@ export function useDocumentTypesPage() {
     if (!searchQuery.trim()) return templates;
     const q = searchQuery.trim().toLowerCase();
     return templates.filter(
-      (t: { name?: string; description?: string }) =>
+      (t: { name?: string; description?: string | null | undefined }) =>
         (t.name || "").toLowerCase().includes(q) ||
-        (t.description || "").toLowerCase().includes(q)
-    );
+        (t.description || null || "").toLowerCase().includes(q)
+    ) as typeof templates;
   }, [templates, searchQuery]);
 
   // Mapear para formato da tabela

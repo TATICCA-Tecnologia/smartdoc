@@ -15,15 +15,18 @@ import { Building2, Plus, Loader2, AlertCircle, Search } from "lucide-react";
 import { useModal } from "@/src/shared/context/modal-context";
 import { CompanyModal } from "./_components/company-form";
 import { api } from "@/src/shared/context/trpc-context";
+import { useSelectedCompany } from "@/src/shared/context/company-context";
 
 export default function CompaniesPage() {
+  const { selectedCompany } = useSelectedCompany();
   const [search, setSearch] = useState("");
   const { openModal } = useModal();
 
   const { data, isLoading, error, refetch } = api.company.list.useQuery({
     page: 1,
-    pageSize: 50,
+    pageSize: 10,
     search: search || undefined,
+    companyId: selectedCompany?.id || undefined,
   });
 
   const companies = data?.companies || [];

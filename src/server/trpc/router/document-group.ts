@@ -17,10 +17,11 @@ export const documentGroupRouter = router({
         page: z.number().default(1),
         pageSize: z.number().default(100),
         search: z.string().optional(),
+        companyId: z.string().optional(),
       })
     )
     .query(async ({ ctx, input }) => {
-      const { page, pageSize, search } = input;
+      const { page, pageSize, search, companyId } = input;
       const skip = (page - 1) * pageSize;
 
       const where = {
@@ -34,7 +35,14 @@ export const documentGroupRouter = router({
 
       const [groups, total] = await Promise.all([
         ctx.prisma.documentGroup.findMany({
-          where,
+          where: {
+            ...where,
+            documents: {
+              every: {
+                companyId: companyId,
+              }
+            }
+          },
           skip,
           take: pageSize,
           orderBy: { name: "asc" },

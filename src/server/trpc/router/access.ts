@@ -14,8 +14,14 @@ import {
 const requireAccessManagement = createPermissionMiddleware("accesses:manage");
 
 export const accessRouter = router({
-  listUsers: protectedProcedure.query(async ({ ctx }) => {
+  listUsers: protectedProcedure.input(z.object({
+    companyId: z.string().optional(),
+  })).query(async ({ ctx, input }) => {
+    const { companyId } = input;
     const users = await ctx.prisma.user.findMany({
+      where: {
+        ...(companyId && { userCompanies: { some: { companyId } } }),
+      },
       select: {
         id: true,
         name: true,
