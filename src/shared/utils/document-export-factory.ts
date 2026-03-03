@@ -1,4 +1,4 @@
-export type ExportFormat = "pdf" | "excel" | "csv";
+export type ExportFormat = "pdf" | "excel";
 
 export interface DocumentData {
   id: string;
@@ -236,98 +236,6 @@ class ExcelExporter implements DocumentExportFactory {
   }
 }
 
-class CSVExporter implements DocumentExportFactory {
-  async export(data: DocumentData | DocumentData[], filename?: string): Promise<void> {
-    const documents = Array.isArray(data) ? data : [data];
-
-    // Coletar todas as chaves possíveis (incluindo campos customizados)
-    const allKeys = new Set<string>();
-    documents.forEach((doc) => {
-      allKeys.add("Tipo de Documento");
-      allKeys.add("Órgão");
-      allKeys.add("Empresa");
-      allKeys.add("Estabelecimento");
-      allKeys.add("Responsável");
-      allKeys.add("Email");
-      allKeys.add("Data de Expiração");
-      allKeys.add("Data de Alerta");
-      allKeys.add("Status");
-      allKeys.add("Data de Criação");
-      allKeys.add("Observações");
-      if (doc.customData) {
-        Object.keys(doc.customData).forEach((key) => allKeys.add(key));
-      }
-    });
-
-    const headers = Array.from(allKeys);
-
-    // Criar linhas CSV
-    const rows = documents.map((doc) => {
-      const row: Record<string, string> = {
-        "Tipo de Documento": doc.templateName,
-        "Órgão": doc.organizationName,
-        "Empresa": doc.companyName,
-        "Estabelecimento": doc.establishmentName,
-        "Responsável": doc.responsibleName,
-        "Email": doc.responsibleEmail || "",
-        "Data de Expiração": doc.expirationDate
-          ? new Date(doc.expirationDate).toLocaleDateString("pt-BR")
-          : "",
-        "Data de Alerta": doc.alertDate
-          ? new Date(doc.alertDate).toLocaleDateString("pt-BR")
-          : "",
-        "Status": this.translateStatus(doc.status),
-        "Data de Criação": new Date(doc.createdAt).toLocaleDateString("pt-BR"),
-        "Observações": doc.observations || "",
-      };
-
-      // Adicionar campos customizados
-      if (doc.customData) {
-        Object.entries(doc.customData).forEach(([key, value]) => {
-          row[key] = String(value || "");
-        });
-      }
-
-      return headers.map((header) => {
-        const value = row[header] || "";
-        // Escapar vírgulas e aspas
-        if (value.includes(",") || value.includes('"') || value.includes("\n")) {
-          return `"${value.replace(/"/g, '""')}"`;
-        }
-        return value;
-      });
-    });
-
-    // Criar conteúdo CSV
-    const csvContent = [
-      headers.map((h) => (h.includes(",") || h.includes('"') ? `"${h}"` : h)).join(","),
-      ...rows.map((row) => row.join(",")),
-    ].join("\n");
-
-    // Adicionar BOM para Excel reconhecer UTF-8
-    const BOM = "\uFEFF";
-    const blob = new Blob([BOM + csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = filename || `documentos_${new Date().toISOString().split("T")[0]}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  }
-
-  private translateStatus(status: string): string {
-    const statusMap: Record<string, string> = {
-      ACTIVE: "Ativo",
-      EXPIRED: "Expirado",
-      PENDING: "Pendente",
-      CANCELLED: "Cancelado",
-    };
-    return statusMap[status] || status;
-  }
-}
-
 export class DocumentExportFactory {
   static create(format: ExportFormat): DocumentExportFactory {
     switch (format) {
@@ -335,8 +243,6 @@ export class DocumentExportFactory {
         return new PDFExporter();
       case "excel":
         return new ExcelExporter();
-      case "csv":
-        return new CSVExporter();
       default:
         throw new Error(`Formato não suportado: ${format}`);
     }

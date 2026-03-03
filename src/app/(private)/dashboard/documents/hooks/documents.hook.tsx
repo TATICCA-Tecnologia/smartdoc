@@ -4,6 +4,7 @@ import { useState, useCallback, useMemo } from "react";
 import { useModal } from "@/src/shared/context/modal-context";
 import { useSelectedCompany } from "@/src/shared/context/company-context";
 import { DocumentFormModal } from "../_components/document-form";
+import type { SavedDocument } from "../_components/document-list";
 import { api } from "@/src/shared/context/trpc-context";
 
 export function useDocumentsPage() {
@@ -49,11 +50,11 @@ export function useDocumentsPage() {
     createdAt: doc.createdAt.toISOString(),
   })), [documents]);
 
-  const filteredDocuments = useMemo(() => {
+  const filteredDocuments = useMemo((): SavedDocument[] => {
     if (!searchQuery.trim()) return mappedDocuments;
     const q = searchQuery.trim().toLowerCase();
     return mappedDocuments.filter(
-      (d: typeof mappedDocuments[0]) =>
+      (d: SavedDocument) =>
         (d.documentTypeName || "").toLowerCase().includes(q) ||
         (d.orgaoName || "").toLowerCase().includes(q) ||
         (d.companyName || "").toLowerCase().includes(q) ||
@@ -78,7 +79,7 @@ export function useDocumentsPage() {
     );
   }, [openModal, refetch]);
 
-  const handleEditDocument = useCallback((doc: typeof filteredDocuments[0]) => {
+  const handleEditDocument = useCallback((doc: SavedDocument) => {
     openModal(
       "edit-document-" + doc.id,
       DocumentFormModal,

@@ -6,6 +6,7 @@ import {
   LayoutGrid,
   List,
   Search,
+  FileText,
 } from "lucide-react";
 import { Button } from "@/src/shared/components/global/ui";
 import { Input } from "@/src/shared/components/global/ui/input";
@@ -68,7 +69,12 @@ export default function DocumentsPage() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold">Documentos</h1>
+        <div>
+          <div className="size-10 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+            <FileText className="h-5 w-5" />
+          </div>
+          <h1 className="text-2xl font-semibold">Documentos</h1>
+        </div>
         <div className="flex flex-wrap items-center gap-2">
           <div className="relative max-w-[220px]">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

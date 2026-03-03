@@ -18,7 +18,7 @@ interface DocumentPreviewModalProps {
   open: boolean;
   onClose: () => void;
   document: DocumentData;
-  onExport?: (format: "pdf" | "excel" | "csv") => void;
+  onExport?: (format: "pdf" | "excel") => void;
   attachments?: Array<{ name: string; filePath?: string }>;
 }
 
@@ -58,7 +58,7 @@ export function DocumentPreviewModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
-            Preview do Documento
+            Visualização do Documento
           </DialogTitle>
           <DialogDescription>
             Visualize as informações do documento antes de exportar
@@ -223,16 +223,6 @@ export function DocumentPreviewModal({
                   }}
                 >
                   Exportar Excel
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    onExport("csv");
-                    onClose();
-                  }}
-                >
-                  Exportar CSV
                 </Button>
               </>
             )}

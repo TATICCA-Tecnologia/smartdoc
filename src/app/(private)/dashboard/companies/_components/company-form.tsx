@@ -175,7 +175,7 @@ export function CompanyModal({ onClose, data }: ModalProps<CompanyModalData>) {
               <FormItem>
                 <FormLabel>Nome da Empresa</FormLabel>
                 <FormControl>
-                  <Input placeholder="Ex: SANDVIK MGS S.A." {...field} />
+                  <Input placeholder="Ex: Empresa XPTO S.A." {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

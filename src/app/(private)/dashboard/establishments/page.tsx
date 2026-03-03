@@ -150,10 +150,10 @@ function EstablishmentsPageContent() {
               size="sm"
               className="gap-1 print:hidden"
               onClick={() => window.print()}
-              title="Imprimir filiais"
+              title="Imprimir"
             >
               <Printer className="h-4 w-4" />
-              Imprimir filiais
+              Imprimir
             </Button>
           </div>
         </CardHeader>

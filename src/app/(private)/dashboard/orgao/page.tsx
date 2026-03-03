@@ -59,7 +59,7 @@ function OrgaoPageContent() {
         <div className="flex flex-col flex-1">
           <h1 className="text-2xl font-semibold">Órgãos</h1>
           <p className="text-sm text-muted-foreground">
-            Cadastre o nome do órgão e seus dados cadastrais.
+            Informe o nome do órgão e seus dados cadastrais.
           </p>
         </div>
         <Button

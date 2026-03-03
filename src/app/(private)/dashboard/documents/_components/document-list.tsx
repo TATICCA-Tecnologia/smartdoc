@@ -24,6 +24,8 @@ import { DocumentExportFactory, type DocumentData } from "@/src/shared/utils/doc
 
 export type SavedDocument = {
   id: string;
+  name?: string;
+  templateName?: string;
   documentTypeId: string;
   documentTypeName: string;
   orgaoId: string;
@@ -180,7 +182,7 @@ export function DocumentList({ documents, groupBy = "none", onEditDocument }: Do
     }
   };
 
-  const handleExportPreview = async (format: "pdf" | "excel" | "csv") => {
+  const handleExportPreview = async (format: "pdf" | "excel") => {
     if (!previewDoc) return;
     await DocumentExportFactory.export(format, toDocumentData(previewDoc));
   };

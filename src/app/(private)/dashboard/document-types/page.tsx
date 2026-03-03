@@ -24,19 +24,19 @@ function DocumentTypesPageContent() {
         <div>
           <h1 className="text-3xl font-bold">Tipos de Documentos</h1>
           <p className="text-muted-foreground">
-            Gerencie os templates de documentos do sistema
+            Gerencie os modelos de documentos do sistema
           </p>
         </div>
         <Button onClick={handleOpenNewTemplate}>
           <Plus className="mr-2 h-4 w-4" />
-          Novo Template
+          Novo
         </Button>
       </div>
 
       <div className="relative max-w-sm">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
-          placeholder="Pesquisar documento"
+          placeholder="Pesquisar modelo"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="pl-9"
@@ -56,8 +56,8 @@ function DocumentTypesPageContent() {
         <div className="flex h-40 items-center justify-center rounded-xl border border-dashed border-border/60">
           <p className="text-sm text-muted-foreground">
             {searchQuery.trim()
-              ? "Nenhum template encontrado para essa pesquisa."
-              : "Nenhum template cadastrado. Clique em \"Novo Template\" para criar o primeiro."}
+              ? "Nenhum modelo encontrado para essa pesquisa."
+              : "Nenhum modelo cadastrado. Clique em \"Novo Modelo\" para criar o primeiro."}
           </p>
         </div>
       ) : (

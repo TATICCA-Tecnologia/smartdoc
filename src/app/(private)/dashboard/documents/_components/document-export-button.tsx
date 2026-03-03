@@ -52,8 +52,6 @@ export function DocumentExportButton({ documents, disabled }: DocumentExportButt
         return <FileText className="h-4 w-4" />;
       case "excel":
         return <FileSpreadsheet className="h-4 w-4" />;
-      case "csv":
-        return <File className="h-4 w-4" />;
     }
   };
 
@@ -63,8 +61,6 @@ export function DocumentExportButton({ documents, disabled }: DocumentExportButt
         return "Exportar como PDF";
       case "excel":
         return "Exportar como Excel";
-      case "csv":
-        return "Exportar como CSV";
     }
   };
 
@@ -106,7 +102,7 @@ export function DocumentExportButton({ documents, disabled }: DocumentExportButt
               Preview
             </DropdownMenuItem>
           )}
-          {(["pdf", "excel", "csv"] as ExportFormat[]).map((format) => (
+          {(["pdf", "excel"] as ExportFormat[]).map((format) => (
             <DropdownMenuItem
               key={format}
               onClick={() => handleExport(format)}

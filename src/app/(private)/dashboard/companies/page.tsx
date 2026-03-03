@@ -78,7 +78,7 @@ export default function CompaniesPage() {
             <Building2 className="h-5 w-5" />
           </div>
           <div className="flex flex-col flex-1">
-            <h1 className="text-2xl font-semibold">Empresas / Estabelecimentos</h1>
+            <h1 className="text-2xl font-semibold">Empresas</h1>
             <p className="text-sm text-muted-foreground">Carregando...</p>
           </div>
         </div>
@@ -97,7 +97,7 @@ export default function CompaniesPage() {
             <AlertCircle className="h-5 w-5" />
           </div>
           <div className="flex flex-col flex-1">
-            <h1 className="text-2xl font-semibold">Empresas / Estabelecimentos</h1>
+            <h1 className="text-2xl font-semibold">Empresas</h1>
             <p className="text-sm text-red-600">Erro ao carregar dados</p>
           </div>
         </div>
@@ -118,7 +118,7 @@ export default function CompaniesPage() {
           <Building2 className="h-5 w-5" />
         </div>
         <div className="flex flex-col flex-1">
-          <h1 className="text-2xl font-semibold">Empresas / Estabelecimentos</h1>
+          <h1 className="text-2xl font-semibold">Empresas</h1>
           <p className="text-sm text-muted-foreground">
             Empresa, estabelecimento, status e inscrições cadastrais.
           </p>
