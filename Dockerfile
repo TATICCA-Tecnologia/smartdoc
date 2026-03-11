@@ -5,16 +5,18 @@ WORKDIR /app
 ARG DATABASE_URL
 ENV DATABASE_URL=$DATABASE_URL
 
-COPY package.json package-lock.json* ./
+RUN corepack enable
 
-RUN npm ci
+COPY package.json pnpm-lock.yaml* ./
+
+RUN pnpm install --frozen-lockfile || pnpm install
 
 COPY . .
 
-RUN npx prisma generate
+RUN pnpm prisma generate
 
-RUN npm run build
+RUN pnpm run build
 
 EXPOSE 3000
 
-CMD ["npm", "start"]
+CMD ["pnpm", "start"]
