@@ -44,3 +44,8 @@ jobs:
           tags: |
             ${{ env.IMAGE_NAME }}:latest
             ${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+      - name: Trigger Portainer webhook
+        if: success() && vars.PORTAINER_WEBHOOK_URL != ''
+        run: |
+          curl -X POST "${{ vars.PORTAINER_WEBHOOK_URL }}"
