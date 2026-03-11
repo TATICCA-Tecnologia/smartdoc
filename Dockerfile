@@ -7,7 +7,7 @@ ENV DATABASE_URL=$DATABASE_URL
 
 COPY package.json package-lock.json* ./
 
-RUN npm ci --frozen-lockfile
+RUN npm ci
 
 COPY . .
 
