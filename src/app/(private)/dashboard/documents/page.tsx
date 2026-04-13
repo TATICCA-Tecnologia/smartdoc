@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import {
   Plus,
   Loader2,
@@ -22,7 +22,7 @@ import { DocumentExportButton } from "./_components/document-export-button";
 import { useDocumentsPage } from "./hooks/documents.hook";
 import { CompanyScopeToggle } from "@/src/shared/components/global/company-scope-toggle";
 
-export default function DocumentsPage() {
+function DocumentsPageContent() {
   const {
     documents,
     handleOpenNewDocument,
@@ -143,5 +143,19 @@ export default function DocumentsPage() {
         onEditDocument={handleEditDocument}
       />
     </div>
+  );
+}
+
+export default function DocumentsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      }
+    >
+      <DocumentsPageContent />
+    </Suspense>
   );
 }
