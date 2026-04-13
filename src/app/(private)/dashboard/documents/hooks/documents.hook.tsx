@@ -6,16 +6,22 @@ import { useCompanyScopeFilter } from "@/src/shared/hook/use-company-scope-filte
 import { DocumentFormModal } from "../_components/document-form";
 import type { SavedDocument } from "../_components/document-list";
 import { api } from "@/src/shared/context/trpc-context";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 export function useDocumentsPage() {
   const { openModal } = useModal();
   const { scope, setScope, selectedCompany, companyIdForQuery } = useCompanyScopeFilter();
   const [searchQuery, setSearchQuery] = useState("");
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const establishmentIdFilter = searchParams.get("establishmentId") || undefined;
 
   const { data: documentsData, isLoading, error, refetch } = api.document.list.useQuery({
     page: 1,
     pageSize: 100,
     ...(companyIdForQuery ? { companyId: companyIdForQuery } : {}),
+    ...(establishmentIdFilter ? { establishmentId: establishmentIdFilter } : {}),
   });
 
   const documents = documentsData?.documents || [];
@@ -101,6 +107,10 @@ export function useDocumentsPage() {
     );
   }, [openModal, refetch]);
 
+  const clearEstablishmentFilter = useCallback(() => {
+    router.replace(pathname);
+  }, [pathname, router]);
+
   return {
     documents: filteredDocuments,
     isLoading,
@@ -113,6 +123,8 @@ export function useDocumentsPage() {
     scope,
     setScope,
     selectedCompany,
+    establishmentIdFilter,
+    clearEstablishmentFilter,
   };
 }
 

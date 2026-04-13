@@ -33,6 +33,8 @@ export default function DocumentsPage() {
     scope,
     setScope,
     selectedCompany,
+    establishmentIdFilter,
+    clearEstablishmentFilter,
   } = useDocumentsPage();
   const [viewMode, setViewMode] = useState<"none" | "group">("none");
 
@@ -124,6 +126,16 @@ export default function DocumentsPage() {
           </Button>
         </div>
       </div>
+      {establishmentIdFilter && (
+        <div className="flex items-center justify-between gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2">
+          <p className="text-sm text-emerald-800">
+            Exibindo documentos filtrados por estabelecimento.
+          </p>
+          <Button variant="ghost" size="sm" onClick={clearEstablishmentFilter}>
+            Limpar filtro
+          </Button>
+        </div>
+      )}
 
       <DocumentList
         documents={documents as any}

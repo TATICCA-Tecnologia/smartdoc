@@ -7,6 +7,7 @@ import { DataTable } from "@/src/shared/components/global/datatable/data-table";
 import { Building2, FileText, Folder, Plus, Loader2, AlertCircle, Search, Printer } from "lucide-react";
 import { useEstablishmentsPage } from "./hooks/establishments.hook";
 import { CompanyScopeToggle } from "@/src/shared/components/global/company-scope-toggle";
+import Link from "next/link";
 
 function EstablishmentsPageContent() {
   const {
@@ -148,6 +149,19 @@ function EstablishmentsPageContent() {
                   <span className="text-sm text-muted-foreground">
                     {establishment.filesCount} arquivo(s)
                   </span>
+                </div>
+                <div className="pt-1">
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    <Link href={`/dashboard/documents?establishmentId=${establishment.id}`}>
+                      Ver documentos deste estabelecimento
+                    </Link>
+                  </Button>
                 </div>
               </CardContent>
             </Card>
