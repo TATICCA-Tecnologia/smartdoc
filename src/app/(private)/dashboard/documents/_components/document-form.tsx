@@ -22,7 +22,7 @@ import {
 import { Textarea } from "@/src/shared/components/global/ui/textarea";
 import { useZodForm } from "@/src/shared/hook/use-zod-form";
 import { ModalProps } from "@/src/shared/types/modal";
-import { FileText, Upload, X, Loader2, Plus, Pencil } from "lucide-react";
+import { FileText, Upload, X, Loader2, Plus, Pencil, Lock } from "lucide-react";
 import { api } from "@/src/shared/context/trpc-context";
 import { DateRangePicker } from "@/src/shared/components/global/date-picker";
 import { useModal } from "@/src/shared/context/modal-context";
@@ -51,6 +51,7 @@ const documentSchema = z
     classification: z.string().optional(),
     groupIds: z.array(z.string()).default([]),
     observations: z.string().optional(),
+    accessPassword: z.string().optional(),
   })
   .refine(
     (data) => {
@@ -183,6 +184,7 @@ export function DocumentFormModal({
       classification: "",
       groupIds: [],
       observations: "",
+      accessPassword: "",
     },
   });
 
@@ -335,6 +337,7 @@ export function DocumentFormModal({
         groupIds: values.groupIds.length ? values.groupIds : undefined,
         observations: values.observations || undefined,
         customData: Object.keys(customFieldsData).length > 0 ? customFieldsData : undefined,
+        accessPassword: values.accessPassword || undefined,
       });
       return;
     }
@@ -355,6 +358,7 @@ export function DocumentFormModal({
         groupIds: values.groupIds.length ? values.groupIds : undefined,
         observations: values.observations || undefined,
         customData: Object.keys(customFieldsData).length > 0 ? customFieldsData : undefined,
+        accessPassword: values.accessPassword || undefined,
         status: "ACTIVE",
       });
     } catch (error) {
@@ -820,6 +824,36 @@ export function DocumentFormModal({
                       {...field}
                     />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="accessPassword"
+              render={({ field }) => (
+                <FormItem className="flex-1 w-full">
+                  <FormLabel className="flex items-center gap-2">
+                    <Lock className="h-4 w-4" />
+                    Senha de acesso ao link público
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      type="password"
+                      placeholder={
+                        isEditing
+                          ? "Deixe vazio para manter a senha atual"
+                          : "Opcional — protege o link público com senha"
+                      }
+                      {...field}
+                    />
+                  </FormControl>
+                  <p className="text-xs text-muted-foreground">
+                    {isEditing
+                      ? "Preencha apenas se quiser alterar ou remover a senha atual. Para remover, envie um espaço."
+                      : "Quem acessar o link público precisará informar esta senha para visualizar o documento."}
+                  </p>
                   <FormMessage />
                 </FormItem>
               )}

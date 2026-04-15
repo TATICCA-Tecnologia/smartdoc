@@ -369,6 +369,9 @@ model Document {
   // Observações
   observations String?
 
+  // Proteção por senha no link público
+  accessPassword String? @map("access_password")
+
   // Status
   status DocumentStatus @default(ACTIVE)
 

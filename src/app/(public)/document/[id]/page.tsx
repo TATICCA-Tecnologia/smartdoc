@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, Button, Badge } from "@/src/shared/components/global/ui";
 import {
   FileText,
@@ -14,8 +14,12 @@ import {
   User,
   ExternalLink,
   Paperclip,
+  Lock,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { api } from "@/src/shared/context/trpc-context";
+import { Input } from "@/src/shared/components/global/ui/input";
 
 interface DocumentPublic {
   template?: { name?: string | null } | null;
@@ -71,6 +75,78 @@ function ErrorView({ message, onBack }: { message: string; onBack: () => void })
             <ArrowLeft className="h-4 w-4" />
             Voltar
           </Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function PasswordGate({
+  onSubmit,
+  isLoading,
+  hasError,
+}: {
+  onSubmit: (password: string) => void;
+  isLoading: boolean;
+  hasError: boolean;
+}) {
+  const [value, setValue] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (value.trim()) onSubmit(value.trim());
+  };
+
+  return (
+    <div className="min-h-screen bg-muted/30 flex items-center justify-center p-6">
+      <Card className="w-full max-w-sm">
+        <CardHeader className="text-center pb-2">
+          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
+            <Lock className="h-7 w-7 text-primary" aria-hidden />
+          </div>
+          <CardTitle className="text-lg">Documento protegido</CardTitle>
+          <p className="text-sm text-muted-foreground mt-1">
+            Este documento requer uma senha para ser visualizado.
+          </p>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="relative">
+              <Input
+                type={showPassword ? "text" : "password"}
+                placeholder="Digite a senha de acesso"
+                value={value}
+                onChange={(e) => setValue(e.target.value)}
+                className={hasError ? "border-destructive pr-10" : "pr-10"}
+                autoFocus
+              />
+              <button
+                type="button"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                onClick={() => setShowPassword((v) => !v)}
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+            {hasError && (
+              <p className="text-sm text-destructive flex items-center gap-1.5">
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                Senha incorreta. Tente novamente.
+              </p>
+            )}
+            <Button type="submit" className="w-full" disabled={isLoading || !value.trim()}>
+              {isLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Verificando...
+                </>
+              ) : (
+                "Acessar documento"
+              )}
+            </Button>
+          </form>
         </CardContent>
       </Card>
     </div>
@@ -148,10 +224,18 @@ export default function PublicDocumentPage() {
   const router = useRouter();
   const id = params?.id as string | undefined;
 
-  const { data: document, isLoading, error } = api.document.getPublicById.useQuery(
-    { id: id ?? "" },
-    { enabled: !!id }
+  const [submittedPassword, setSubmittedPassword] = useState<string | undefined>(undefined);
+
+  const { data: queryResult, isLoading, error } = api.document.getPublicById.useQuery(
+    { id: id ?? "", password: submittedPassword },
+    {
+      enabled: !!id,
+      retry: false,
+    }
   );
+
+  const status = queryResult?.status;
+  const document = queryResult?.document;
 
   const attachments = useMemo(
     () => (document?.attachments && document.attachments.length > 0 ? document.attachments : []),
@@ -166,14 +250,38 @@ export default function PublicDocumentPage() {
     return <LoadingView onBack={() => router.back()} />;
   }
 
-  if (error || !document) {
+  if (error) {
     return (
       <ErrorView
-        message={error?.message ?? "O documento solicitado não existe ou não está mais disponível."}
+        message={error.message ?? "O documento solicitado não existe ou não está mais disponível."}
         onBack={() => router.back()}
       />
     );
   }
+
+  // Documento requer senha (ainda não fornecida)
+  if (status === "requires_password") {
+    return (
+      <PasswordGate
+        onSubmit={(pwd) => setSubmittedPassword(pwd)}
+        isLoading={isLoading}
+        hasError={false}
+      />
+    );
+  }
+
+  // Senha incorreta
+  if (status === "wrong_password") {
+    return (
+      <PasswordGate
+        onSubmit={(pwd) => setSubmittedPassword(pwd)}
+        isLoading={isLoading}
+        hasError={true}
+      />
+    );
+  }
+
+  if (!document) return null;
 
   if (attachments.length === 0) {
     return (

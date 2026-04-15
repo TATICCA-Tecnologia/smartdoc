@@ -1,5 +1,7 @@
 import { z } from "zod";
 import { Prisma } from "@prisma/client";
+import bcrypt from "bcryptjs";
+import { TRPCError } from "@trpc/server";
 import { protectedProcedure, publicProcedure, router } from "../trpc";
 import { getUserCompanyIds } from "../utils/user-company-scope";
 
@@ -18,6 +20,7 @@ const createDocumentSchema = z.object({
   groupIds: z.array(z.string()).optional(),
   customData: z.record(z.string(), z.any()).optional().nullable(),
   observations: z.string().optional().nullable(),
+  accessPassword: z.string().optional().nullable(),
   status: z.enum(["ACTIVE", "EXPIRED", "PENDING", "CANCELLED"]).default("ACTIVE"),
 });
 
@@ -194,7 +197,7 @@ export const documentRouter = router({
     }),
 
   getPublicById: publicProcedure
-    .input(z.object({ id: z.string() }))
+    .input(z.object({ id: z.string(), password: z.string().optional() }))
     .query(async ({ ctx, input }) => {
       const document = await ctx.prisma.document.findUnique({
         where: { id: input.id },
@@ -235,22 +238,38 @@ export const documentRouter = router({
       });
 
       if (!document) {
-        throw new Error("Documento não encontrado");
+        throw new TRPCError({ code: "NOT_FOUND", message: "Documento não encontrado" });
       }
 
-      return document;
+      // Verificar proteção por senha
+      if (document.accessPassword) {
+        if (!input.password) {
+          return { status: "requires_password" as const, document: null };
+        }
+        const isValid = await bcrypt.compare(input.password, document.accessPassword);
+        if (!isValid) {
+          return { status: "wrong_password" as const, document: null };
+        }
+      }
+
+      // Nunca retornar a senha hash
+      const { accessPassword, ...documentWithoutPassword } = document;
+      return { status: "ok" as const, document: documentWithoutPassword };
     }),
 
   create: protectedProcedure
     .input(createDocumentSchema)
     .mutation(async ({ ctx, input }) => {
-      const { expirationDate, alertDate, issueDate, groupId, groupIds, ...data } = input;
+      const { expirationDate, alertDate, issueDate, groupId, groupIds, accessPassword, ...data } = input;
       const normalizedGroupIds = groupIds ?? (groupId ? [groupId] : []);
       const legacyGroupId = normalizedGroupIds[0];
+
+      const hashedPassword = accessPassword ? await bcrypt.hash(accessPassword, 10) : null;
 
       const document = await ctx.prisma.document.create({
         data: {
           ...data,
+          accessPassword: hashedPassword,
           groupId: legacyGroupId,
           groups: normalizedGroupIds.length
             ? {
@@ -297,7 +316,7 @@ export const documentRouter = router({
   update: protectedProcedure
     .input(updateDocumentSchema)
     .mutation(async ({ ctx, input }) => {
-      const { id, expirationDate, alertDate, issueDate, ...data } = input;
+      const { id, expirationDate, alertDate, issueDate, accessPassword, ...data } = input;
 
       const updateData: any = {};
       
@@ -330,6 +349,9 @@ export const documentRouter = router({
       if (issueDate) updateData.issueDate = new Date(issueDate);
       if (expirationDate) updateData.expirationDate = new Date(expirationDate);
       if (alertDate) updateData.alertDate = new Date(alertDate);
+      if (accessPassword !== undefined) {
+        updateData.accessPassword = accessPassword ? await bcrypt.hash(accessPassword, 10) : null;
+      }
 
       const document = await ctx.prisma.document.update({
         where: { id },
