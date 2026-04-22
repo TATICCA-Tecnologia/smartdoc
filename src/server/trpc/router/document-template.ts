@@ -32,6 +32,7 @@ const createTemplateSchema = z.object({
   name: z.string().min(1).max(120),
   description: z.string().optional(),
   isDefault: z.boolean().default(false),
+  companyId: z.string(),
   fields: z.array(fieldSchema),
 });
 
@@ -54,9 +55,9 @@ export const documentTemplateRouter = router({
       const { page, pageSize, search, isDefault, companyId } = input;
       const skip = (page - 1) * pageSize;
 
-      let documentCompanyScope: Record<string, unknown> = {};
+      let companyFilter: Record<string, unknown> = {};
       if (companyId) {
-        documentCompanyScope = { documents: { every: { companyId } } };
+        companyFilter = { companyId };
       } else {
         const ids = await getUserCompanyIds(ctx);
         if (ids.length === 0) {
@@ -65,9 +66,7 @@ export const documentTemplateRouter = router({
             pagination: { page, pageSize, total: 0, totalPages: 0 },
           };
         }
-        documentCompanyScope = {
-          documents: { some: { companyId: { in: ids } } },
-        };
+        companyFilter = { companyId: { in: ids } };
       }
 
       const where = {
@@ -78,7 +77,7 @@ export const documentTemplateRouter = router({
           ],
         }),
         ...(isDefault !== undefined && { isDefault }),
-        ...documentCompanyScope,
+        ...companyFilter,
       };
 
       const [templates, total] = await Promise.all([
@@ -134,11 +133,12 @@ export const documentTemplateRouter = router({
   create: protectedProcedure
     .input(createTemplateSchema)
     .mutation(async ({ ctx, input }) => {
-      const { fields, ...templateData } = input;
+      const { fields, companyId, ...templateData } = input;
 
       const template = await ctx.prisma.documentTemplate.create({
         data: {
           ...templateData,
+          companyId,
           fields: {
             create: fields,
           },

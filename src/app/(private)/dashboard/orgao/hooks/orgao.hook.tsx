@@ -84,6 +84,7 @@ export function useOrgaoPage() {
       "create-orgao",
       OrgaoModal,
       {
+        companyId: companyIdForQuery ?? selectedCompany?.id,
         onSuccess: () => {
           refetch();
         },

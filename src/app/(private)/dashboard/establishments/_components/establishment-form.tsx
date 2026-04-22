@@ -21,6 +21,7 @@ import {
 import { useZodForm } from "@/src/shared/hook/use-zod-form";
 import { ModalProps } from "@/src/shared/types/modal";
 import { api } from "@/src/shared/context/trpc-context";
+import { useEffect } from "react";
 
 interface EstablishmentData {
   id: string;
@@ -39,6 +40,7 @@ interface EstablishmentData {
 }
 
 interface EstablishmentModalData {
+  companyId?: string;
   establishment?: EstablishmentData;
   onSuccess: () => void;
 }
@@ -72,7 +74,7 @@ export function EstablishmentModal({
 
   const form = useZodForm(establishmentSchema, {
     defaultValues: {
-      companyId: data?.establishment?.companyId || "",
+      companyId: data?.establishment?.companyId || data?.companyId || "",
       name: data?.establishment?.name || "",
       code: data?.establishment?.code || "",
       cnpj: data?.establishment?.cnpj || "",
@@ -84,6 +86,15 @@ export function EstablishmentModal({
       status: data?.establishment?.status || "ACTIVE",
     },
   });
+
+  // Pré-seleciona: empresa do navbar > primeira da lista
+  useEffect(() => {
+    if (data?.establishment) return;
+    const current = form.getValues("companyId");
+    if (current) return;
+    const fallback = companies[0]?.id;
+    if (fallback) form.setValue("companyId", fallback);
+  }, [companies]);
 
   if (!data) return null;
 

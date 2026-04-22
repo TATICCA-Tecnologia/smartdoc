@@ -5,6 +5,7 @@ import { getUserCompanyIds } from "../utils/user-company-scope";
 const createDocumentGroupSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
   description: z.string().optional(),
+  companyId: z.string().optional(),
 });
 
 const updateDocumentGroupSchema = createDocumentGroupSchema.partial().extend({
@@ -25,9 +26,9 @@ export const documentGroupRouter = router({
       const { page, pageSize, search, companyId } = input;
       const skip = (page - 1) * pageSize;
 
-      let documentCompanyScope: Record<string, unknown> = {};
+      let companyFilter: Record<string, unknown> = {};
       if (companyId) {
-        documentCompanyScope = { documents: { every: { companyId } } };
+        companyFilter = { companyId };
       } else {
         const ids = await getUserCompanyIds(ctx);
         if (ids.length === 0) {
@@ -36,9 +37,7 @@ export const documentGroupRouter = router({
             pagination: { page, pageSize, total: 0, totalPages: 0 },
           };
         }
-        documentCompanyScope = {
-          documents: { some: { companyId: { in: ids } } },
-        };
+        companyFilter = { companyId: { in: ids } };
       }
 
       const where = {
@@ -48,7 +47,7 @@ export const documentGroupRouter = router({
             { description: { contains: search, mode: "insensitive" as const } },
           ],
         }),
-        ...documentCompanyScope,
+        ...companyFilter,
       };
 
       const [groups, total] = await Promise.all([

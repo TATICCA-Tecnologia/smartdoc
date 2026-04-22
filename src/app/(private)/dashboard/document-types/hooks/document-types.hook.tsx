@@ -53,6 +53,7 @@ export function useDocumentTypesPage() {
       "create-template",
       TemplateFormModal,
       {
+        companyId: companyIdForQuery ?? selectedCompany?.id,
         onSuccess: () => {
           refetch();
         },
@@ -61,7 +62,7 @@ export function useDocumentTypesPage() {
         size: "lg",
       }
     );
-  }, [openModal, refetch]);
+  }, [openModal, refetch, companyIdForQuery, selectedCompany]);
 
   const handleEditTemplate = useCallback((templateId: string) => {
     const template = templates.find((t: any) => t.id === templateId);

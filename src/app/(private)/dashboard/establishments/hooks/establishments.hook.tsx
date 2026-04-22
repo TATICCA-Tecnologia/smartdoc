@@ -95,6 +95,7 @@ export function useEstablishmentsPage() {
       "create-establishment",
       EstablishmentModal,
       {
+        companyId: companyIdForQuery ?? selectedCompany?.id,
         onSuccess: () => {
           refetch();
         },

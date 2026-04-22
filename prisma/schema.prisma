@@ -155,9 +155,12 @@ model Company {
   createdAt             DateTime      @default(now()) @map("created_at")
   updatedAt             DateTime      @updatedAt @map("updated_at")
 
-  establishments Establishment[]
-  documents      Document[]
-  userCompanies  UserCompany[]
+  establishments     Establishment[]
+  documents          Document[]
+  userCompanies      UserCompany[]
+  documentTemplates  DocumentTemplate[]
+  organizations      Organization[]
+  documentGroups     DocumentGroup[]
 
   @@index([cnpj])
   @@index([status])
@@ -168,13 +171,16 @@ model DocumentGroup {
   id          String   @id @default(cuid())
   name        String
   description String?
+  companyId   String?  @map("company_id")
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
+  company         Company?   @relation(fields: [companyId], references: [id], onDelete: SetNull)
   documents       Document[] @relation("DocumentGroups")
   legacyDocuments Document[] @relation("LegacyDocumentGroup")
 
   @@index([name])
+  @@index([companyId])
   @@map("document_groups")
 }
 
@@ -245,6 +251,7 @@ model Organization {
   shortName String           @map("short_name")
   cnpj      String?
   type      OrganizationType
+  companyId String?          @map("company_id")
 
   // Endereço
   address    String?
@@ -258,10 +265,12 @@ model Organization {
   createdAt DateTime           @default(now()) @map("created_at")
   updatedAt DateTime           @updatedAt @map("updated_at")
 
+  company   Company?   @relation(fields: [companyId], references: [id], onDelete: SetNull)
   documents Document[]
 
   @@index([type])
   @@index([status])
+  @@index([companyId])
   @@map("organizations")
 }
 
@@ -287,14 +296,17 @@ model DocumentTemplate {
   description    String?
   isDefault      Boolean  @default(false) @map("is_default")
   classification String?
+  companyId      String?  @map("company_id")
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 
+  company   Company?                @relation(fields: [companyId], references: [id], onDelete: Cascade)
   fields    DocumentTemplateField[]
   documents Document[]
 
   @@index([isDefault])
   @@index([classification])
+  @@index([companyId])
   @@map("document_templates")
 }
 

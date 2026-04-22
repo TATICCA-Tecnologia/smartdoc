@@ -179,7 +179,7 @@ export function DocumentFormModal({
       alertDate: "",
       responsibleId: "",
       chiefId: "",
-      companyId: "",
+      companyId: selectedCompanyId || "",
       establishmentId: "",
       classification: "",
       groupIds: [],
@@ -398,11 +398,8 @@ export function DocumentFormModal({
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(handleSubmit, (errors) => {
-              const msg =
-                errors.alertDate?.message ??
-                errors.root?.message ??
-                "Data de aviso deve ser maior ou igual à data de expedição e menor ou igual à data de expiração.";
-              toast.error(msg);
+              const first = Object.values(errors).find((e) => e?.message);
+              toast.error((first as any)?.message ?? "Verifique os campos obrigatórios.");
             })}
             className="space-y-4"
           >
@@ -695,6 +692,7 @@ export function DocumentFormModal({
                                   "create-document-group",
                                   CreateDocumentGroupModal,
                                   {
+                                    companyId: selectedCompanyId || undefined,
                                     onSuccess: async (groupId) => {
                                       await refetchGroups();
                                       const current = field.value ?? [];
@@ -841,6 +839,7 @@ export function DocumentFormModal({
                   <FormControl>
                     <Input
                       type="password"
+                      autoComplete="new-password"
                       placeholder={
                         isEditing
                           ? "Deixe vazio para manter a senha atual"

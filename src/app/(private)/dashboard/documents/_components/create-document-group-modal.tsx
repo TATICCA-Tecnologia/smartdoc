@@ -18,6 +18,7 @@ import { Loader2 } from "lucide-react";
 import { api } from "@/src/shared/context/trpc-context";
 
 interface CreateDocumentGroupModalData {
+  companyId?: string;
   onSuccess: (groupId: string) => void;
 }
 
@@ -55,6 +56,7 @@ export function CreateDocumentGroupModal({
     createGroupMutation.mutate({
       name: values.name,
       description: values.description || undefined,
+      companyId: data?.companyId,
     });
   };
 

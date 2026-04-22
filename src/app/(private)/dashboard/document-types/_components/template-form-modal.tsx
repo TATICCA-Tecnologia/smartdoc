@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useZodForm } from "@/src/shared/hook/use-zod-form";
 import { z } from "zod";
 import {
@@ -113,14 +113,17 @@ const templateSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
   description: z.string().optional(),
   isDefault: z.boolean().default(false),
+  companyId: z.string().min(1, "Selecione uma empresa"),
 });
 
 type TemplateFormModalData = {
+  companyId?: string;
   template?: {
     id: string;
     name: string;
     description: string | null;
     isDefault: boolean;
+    companyId?: string | null;
     fields: Array<{
       id: string;
       name: string;
@@ -152,13 +155,28 @@ export function TemplateFormModal({
     })) || []
   );
 
+  const { data: companiesData } = api.company.list.useQuery({
+    page: 1,
+    pageSize: 100,
+  });
+  const companies = companiesData?.companies ?? [];
+
   const form = useZodForm(templateSchema, {
     defaultValues: {
       name: data?.template?.name || "",
       description: data?.template?.description || "",
       isDefault: data?.template?.isDefault || false,
+      companyId: data?.template?.companyId || data?.companyId || "",
     },
   });
+
+  useEffect(() => {
+    if (data?.template) return;
+    const current = form.getValues("companyId");
+    if (current) return;
+    const fallback = companies[0]?.id;
+    if (fallback) form.setValue("companyId", fallback);
+  }, [companies]);
 
   const createMutation = api.documentTemplate.create.useMutation({
     onSuccess: () => {
@@ -277,6 +295,33 @@ export function TemplateFormModal({
             )}
           />
 
+          {!data?.template && (
+            <FormField
+              control={form.control}
+              name="companyId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Empresa</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Selecione a empresa" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {companies.map((company: { id: string; name: string }) => (
+                        <SelectItem key={company.id} value={company.id}>
+                          {company.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+
           <FormField
             control={form.control}
             name="description"
@@ -360,27 +405,28 @@ export function TemplateFormModal({
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <label className="text-sm font-medium mb-1 block">
-                          Nome (identificador)
-                        </label>
-                        <Input
-                          placeholder="nome_campo"
-                          value={field.name}
-                          onChange={(e) =>
-                            updateField(field.id, { name: e.target.value })
-                          }
-                        />
-                      </div>
-
-                      <div>
-                        <label className="text-sm font-medium mb-1 block">
                           Label (exibição)
                         </label>
                         <Input
                           placeholder="Nome do Campo"
                           value={field.label}
                           onChange={(e) =>
-                            updateField(field.id, { label: e.target.value })
+                            updateField(field.id, {
+                              label: e.target.value,
+                              name: normalizeFieldName(e.target.value),
+                            })
                           }
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-sm font-medium mb-1 block text-muted-foreground">
+                          ID
+                        </label>
+                        <Input
+                          value={normalizeFieldName(field.label)}
+                          disabled
+                          className="bg-muted text-muted-foreground"
                         />
                       </div>
                     </div>

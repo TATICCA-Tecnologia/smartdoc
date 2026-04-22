@@ -21,6 +21,19 @@ import {
 import { useZodForm } from "@/src/shared/hook/use-zod-form";
 import { ModalProps } from "@/src/shared/types/modal";
 import { api } from "@/src/shared/context/trpc-context";
+import { useState, useEffect } from "react";
+
+function friendlyError(message: string): string {
+  if (message.includes("Unique constraint") || message.includes("unique constraint"))
+    return "Já existe um órgão cadastrado com essas informações. Verifique o CNPJ ou nome.";
+  if (message.includes("Foreign key") || message.includes("foreign key"))
+    return "Este órgão está vinculado a outros registros e não pode ser removido.";
+  if (message.includes("não encontrado") || message.includes("Not found"))
+    return "Órgão não encontrado. Ele pode ter sido removido por outro usuário.";
+  if (message.includes("Network") || message.includes("fetch"))
+    return "Falha na conexão. Verifique sua internet e tente novamente.";
+  return "Ocorreu um erro inesperado. Tente novamente ou contate o suporte.";
+}
 
 interface OrganizationData {
   id: string;
@@ -37,6 +50,7 @@ interface OrganizationData {
 }
 
 interface OrgaoModalData {
+  companyId?: string;
   organization?: OrganizationData;
   onSuccess: () => void;
 }
@@ -46,10 +60,11 @@ const orgaoSchema = z.object({
   shortName: z.string().min(1, "Nome curto é obrigatório").max(60, "Máximo de 60 caracteres"),
   cnpj: z.string().optional(),
   type: z.enum(["FEDERAL", "ESTADUAL", "MUNICIPAL", "OUTROS"]),
+  companyId: z.string().min(1, "Selecione uma empresa"),
   address: z.string().max(180).optional(),
   district: z.string().max(100).optional(),
   city: z.string().max(100).optional(),
-  state: z.string().max(2).optional(),
+  state: z.string().max(2, "UF deve ter no máximo 2 caracteres").optional(),
   zipCode: z.string().max(10).optional(),
   status: z.enum(["ACTIVE", "INACTIVE"]),
 });
@@ -57,12 +72,18 @@ const orgaoSchema = z.object({
 type OrgaoFormValues = z.infer<typeof orgaoSchema>;
 
 export function OrgaoModal({ onClose, data }: ModalProps<OrgaoModalData>) {
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
+  const { data: companiesData } = api.company.list.useQuery({ page: 1, pageSize: 100 });
+  const companies = companiesData?.companies ?? [];
+
   const form = useZodForm(orgaoSchema, {
     defaultValues: {
       name: data?.organization?.name || "",
       shortName: data?.organization?.shortName || "",
       cnpj: data?.organization?.cnpj || "",
       type: data?.organization?.type || "OUTROS",
+      companyId: data?.companyId || "",
       address: data?.organization?.address || "",
       district: data?.organization?.district || "",
       city: data?.organization?.city || "",
@@ -71,6 +92,14 @@ export function OrgaoModal({ onClose, data }: ModalProps<OrgaoModalData>) {
       status: data?.organization?.status || "ACTIVE",
     },
   });
+
+  // Pré-seleciona: empresa do navbar > primeira da lista
+  useEffect(() => {
+    const current = form.getValues("companyId");
+    if (current) return;
+    const fallback = companies[0]?.id;
+    if (fallback) form.setValue("companyId", fallback);
+  }, [companies]);
 
   if (!data) return null;
 
@@ -82,7 +111,7 @@ export function OrgaoModal({ onClose, data }: ModalProps<OrgaoModalData>) {
       onClose();
     },
     onError: (error) => {
-      form.setError("root", { message: error.message });
+      form.setError("root", { message: friendlyError(error.message) });
     },
   });
 
@@ -92,7 +121,7 @@ export function OrgaoModal({ onClose, data }: ModalProps<OrgaoModalData>) {
       onClose();
     },
     onError: (error) => {
-      form.setError("root", { message: error.message });
+      form.setError("root", { message: friendlyError(error.message) });
     },
   });
 
@@ -102,7 +131,8 @@ export function OrgaoModal({ onClose, data }: ModalProps<OrgaoModalData>) {
       onClose();
     },
     onError: (error) => {
-      form.setError("root", { message: error.message });
+      setConfirmDelete(false);
+      form.setError("root", { message: friendlyError(error.message) });
     },
   });
 
@@ -118,7 +148,7 @@ export function OrgaoModal({ onClose, data }: ModalProps<OrgaoModalData>) {
   };
 
   const handleDelete = () => {
-    if (data.organization && confirm("Tem certeza que deseja excluir este órgão?")) {
+    if (data.organization) {
       deleteMutation.mutate({ id: data.organization.id });
     }
   };
@@ -192,6 +222,31 @@ export function OrgaoModal({ onClose, data }: ModalProps<OrgaoModalData>) {
                     </SelectContent>
                   </Select>
                 </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="companyId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Empresa</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger size="default">
+                      <SelectValue placeholder="Selecione a empresa" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {companies.map((company: { id: string; name: string }) => (
+                      <SelectItem key={company.id} value={company.id}>
+                        {company.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}
@@ -307,16 +362,44 @@ export function OrgaoModal({ onClose, data }: ModalProps<OrgaoModalData>) {
             )}
           />
 
-          <div className="flex justify-between gap-3 pt-4 border-t">
-            <div>
-              {isEditing && (
+          {confirmDelete && (
+            <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20 space-y-3">
+              <p className="text-sm font-medium text-destructive">
+                Tem certeza que deseja excluir este órgão? Esta ação não pode ser desfeita.
+              </p>
+              <div className="flex gap-2">
                 <Button
                   type="button"
                   variant="destructive"
+                  size="sm"
                   onClick={handleDelete}
+                  disabled={isDeleting}
+                >
+                  {isDeleting ? "Excluindo..." : "Sim, excluir"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setConfirmDelete(false)}
+                  disabled={isDeleting}
+                >
+                  Cancelar
+                </Button>
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-between gap-3 pt-4 border-t">
+            <div>
+              {isEditing && !confirmDelete && (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={() => setConfirmDelete(true)}
                   disabled={isSubmitting || isDeleting}
                 >
-                  {isDeleting ? "Excluindo..." : "Excluir"}
+                  Excluir
                 </Button>
               )}
             </div>
