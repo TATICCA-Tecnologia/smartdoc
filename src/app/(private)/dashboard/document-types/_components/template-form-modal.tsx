@@ -23,7 +23,8 @@ import {
   SelectValue,
 } from "@/src/shared/components/global/ui/select";
 import { api } from "@/src/shared/context/trpc-context";
-import { Plus, X, Trash2 } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import type { ModalProps } from "@/src/shared/types/modal";
 
 const fieldTypeOptions = [
@@ -180,6 +181,7 @@ export function TemplateFormModal({
 
   const createMutation = api.documentTemplate.create.useMutation({
     onSuccess: () => {
+      toast.success("Template criado com sucesso!");
       data?.onSuccess?.();
       onClose();
     },
@@ -187,6 +189,7 @@ export function TemplateFormModal({
 
   const updateMutation = api.documentTemplate.update.useMutation({
     onSuccess: () => {
+      toast.success("Template atualizado com sucesso!");
       data?.onSuccess?.();
       onClose();
     },
