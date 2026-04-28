@@ -333,10 +333,6 @@ export default function RegisterPage() {
               </div>
             ))}
           </div>
-
-          <div className="absolute -top-4 -right-4 bg-primary text-primary-foreground px-4 py-2 rounded-full shadow-lg">
-            <p className="text-sm font-semibold">100% Gratuito</p>
-          </div>
         </div>
       </div>
     </div>
