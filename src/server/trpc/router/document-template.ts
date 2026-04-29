@@ -186,6 +186,16 @@ export const documentTemplateRouter = router({
   delete: protectedProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
+      const documentsCount = await ctx.prisma.document.count({
+        where: { templateId: input.id },
+      });
+
+      if (documentsCount > 0) {
+        throw new Error(
+          `Não é possível excluir este template pois ele está sendo usado por ${documentsCount} documento(s).`
+        );
+      }
+
       await ctx.prisma.documentTemplate.delete({
         where: { id: input.id },
       });

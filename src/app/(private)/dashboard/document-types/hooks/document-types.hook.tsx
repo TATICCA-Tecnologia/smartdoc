@@ -95,9 +95,9 @@ export function useDocumentTypesPage() {
     try {
       await deleteMutation.mutateAsync({ id: templateId });
       refetch();
-    } catch (error) {
-      console.error("Erro ao excluir template:", error);
-      alert("Erro ao excluir template");
+    } catch (error: any) {
+      const message = error?.message || error?.data?.message || "Erro ao excluir template";
+      alert(message);
     }
   }, [deleteMutation, refetch]);
 
