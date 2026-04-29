@@ -137,6 +137,16 @@ export const organizationRouter = router({
   delete: protectedProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
+      const documentsCount = await ctx.prisma.document.count({
+        where: { organizationId: input.id },
+      });
+
+      if (documentsCount > 0) {
+        throw new Error(
+          `Não é possível excluir este órgão pois ele está sendo usado por ${documentsCount} documento(s).`
+        );
+      }
+
       await ctx.prisma.organization.delete({
         where: { id: input.id },
       });

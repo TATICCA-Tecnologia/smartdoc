@@ -11,6 +11,7 @@ import { useCompanyScopeFilter } from "@/src/shared/hook/use-company-scope-filte
 export function useOrgaoPage() {
   const { openModal } = useModal();
   const { scope, setScope, selectedCompany, companyIdForQuery } = useCompanyScopeFilter();
+  const deleteMutation = api.organization.delete.useMutation();
   const { data, isLoading, error, refetch } = api.organization.list.useQuery({
     page: 1,
     pageSize: 50,
@@ -65,7 +66,19 @@ export function useOrgaoPage() {
     [openModal, organizations, refetch]
   );
 
-  const columns = useMemo(() => getOrgaoColumns(handleEditOrgao), [handleEditOrgao]);
+  const handleDeleteOrgao = useCallback(async (orgao: (typeof tableData)[0]) => {
+    if (!confirm("Tem certeza que deseja excluir este órgão?")) return;
+
+    try {
+      await deleteMutation.mutateAsync({ id: orgao.id });
+      refetch();
+    } catch (error: any) {
+      const message = error?.message || error?.data?.message || "Erro ao excluir órgão";
+      alert(message);
+    }
+  }, [deleteMutation, refetch]);
+
+  const columns = useMemo(() => getOrgaoColumns(handleEditOrgao, handleDeleteOrgao), [handleEditOrgao, handleDeleteOrgao]);
 
   const { table } = useDataTable({
     data: tableData,
@@ -103,6 +116,7 @@ export function useOrgaoPage() {
     refetch,
     handleOpenNewOrgao,
     handleEditOrgao,
+    handleDeleteOrgao,
     scope,
     setScope,
     selectedCompany,
