@@ -232,6 +232,8 @@ model SocialReason {
   createdAt DateTime           @default(now()) @map("created_at")
   updatedAt DateTime           @updatedAt @map("updated_at")
 
+  documents Document[]
+
   @@index([status])
   @@map("social_reasons")
 }
@@ -365,6 +367,7 @@ model Document {
   establishmentId String  @map("establishment_id") // Estabelecimento (pertence à empresa)
   responsibleId   String  @map("responsible_id")
   chiefId         String? @map("chief_id")
+  socialReasonId  String? @map("social_reason_id")
 
   // Datas
   issueDate      DateTime? @map("issue_date")
@@ -400,6 +403,7 @@ model Document {
   chief         User?                @relation("ChiefDocuments", fields: [chiefId], references: [id])
   group         DocumentGroup?       @relation("LegacyDocumentGroup", fields: [groupId], references: [id])
   groups        DocumentGroup[]      @relation("DocumentGroups")
+  socialReason  SocialReason?        @relation(fields: [socialReasonId], references: [id], onDelete: SetNull)
   attachments   DocumentAttachment[]
   files         File[]               @relation("DocumentFiles")
 
@@ -411,6 +415,7 @@ model Document {
   @@index([responsibleId])
   @@index([chiefId])
   @@index([groupId])
+  @@index([socialReasonId])
   @@index([status])
   @@index([expirationDate])
   @@index([issueDate])

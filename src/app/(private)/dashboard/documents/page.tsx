@@ -7,6 +7,8 @@ import {
   List,
   Search,
   FileText,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { Button } from "@/src/shared/components/global/ui";
 import { Input } from "@/src/shared/components/global/ui/input";
@@ -34,7 +36,13 @@ function DocumentsPageContent() {
     setScope,
     selectedCompany,
     establishmentIdFilter,
-    clearEstablishmentFilter,
+    socialReasonIdFilter,
+    socialReasonFilterName,
+    clearFilter,
+    page,
+    setPage,
+    totalPages,
+    total,
   } = useDocumentsPage();
   const [viewMode, setViewMode] = useState<"none" | "group">("none");
 
@@ -126,12 +134,22 @@ function DocumentsPageContent() {
           </Button>
         </div>
       </div>
+      {socialReasonIdFilter && (
+        <div className="flex items-center justify-between gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2">
+          <p className="text-sm text-emerald-800">
+            Exibindo documentos da razão social: <strong>{socialReasonFilterName || "selecionada"}</strong>
+          </p>
+          <Button variant="ghost" size="sm" onClick={clearFilter}>
+            Limpar filtro
+          </Button>
+        </div>
+      )}
       {establishmentIdFilter && (
         <div className="flex items-center justify-between gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2">
           <p className="text-sm text-emerald-800">
             Exibindo documentos filtrados por estabelecimento.
           </p>
-          <Button variant="ghost" size="sm" onClick={clearEstablishmentFilter}>
+          <Button variant="ghost" size="sm" onClick={clearFilter}>
             Limpar filtro
           </Button>
         </div>
@@ -142,6 +160,34 @@ function DocumentsPageContent() {
         groupBy={viewMode === "group" ? "group" : "none"}
         onEditDocument={handleEditDocument}
       />
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between border-t pt-4">
+          <p className="text-sm text-muted-foreground">
+            Página {page} de {totalPages} — {total} documento{total !== 1 ? "s" : ""}
+          </p>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setPage(page - 1)}
+              disabled={page <= 1}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setPage(page + 1)}
+              disabled={page >= totalPages}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

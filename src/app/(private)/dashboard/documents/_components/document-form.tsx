@@ -48,6 +48,7 @@ const documentSchema = z
     chiefId: z.string().optional(),
     companyId: z.string().min(1, "Empresa é obrigatória"),
     establishmentId: z.string().min(1, "Estabelecimento é obrigatório"),
+    socialReasonId: z.string().optional(),
     classification: z.string().optional(),
     groupIds: z.array(z.string()).default([]),
     observations: z.string().optional(),
@@ -151,12 +152,18 @@ export function DocumentFormModal({
     companyId: selectedCompanyId || undefined,
   });
 
+  const { data: socialReasonsData } = api.socialReason.list.useQuery({
+    page: 1,
+    pageSize: 100,
+  });
+
   const templates = templatesData?.templates || [];
   const organizations = orgaosData?.organizations || [];
   const companies = companiesData?.companies || [];
   const establishments = establishmentsData?.establishments || [];
   const users = usersData || [];
   const groups = groupsData?.groups || [];
+  const socialReasons = socialReasonsData?.socialReasons || [];
 
   const { openModal } = useModal();
   const utils = api.useUtils();
@@ -179,12 +186,13 @@ export function DocumentFormModal({
       alertDate: "",
       responsibleId: "",
       chiefId: "",
-      companyId: selectedCompanyId || "",
+      companyId: selectedCompanyId ?? "",
       establishmentId: "",
       classification: "",
       groupIds: [],
       observations: "",
       accessPassword: "",
+      socialReasonId: "",
     },
   });
 
@@ -195,6 +203,7 @@ export function DocumentFormModal({
   useEffect(() => {
     if (!existingDocument) return;
     const d = existingDocument as any;
+
     form.reset({
       templateId: d.templateId ?? "",
       organizationId: d.organizationId ?? "",
@@ -206,12 +215,15 @@ export function DocumentFormModal({
       companyId: d.companyId ?? "",
       establishmentId: d.establishmentId ?? "",
       classification: d.classification ?? "",
-      groupIds: d.groups?.map((group: { id: string }) => group.id) ?? (d.groupId ? [d.groupId] : []),
+      groupIds: d.groups?.map((g: { id: string }) => g.id) ?? (d.groupId ? [d.groupId] : []),
       observations: d.observations ?? "",
+      accessPassword: "",
+      socialReasonId: d.socialReasonId ?? "",
     });
+
     setSelectedTemplateId(d.templateId ?? "");
     setCustomFieldsData((d.customData as Record<string, string>) ?? {});
-  }, [existingDocument, form]);
+  }, [existingDocument]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Mutation para criar documento
   const createDocumentMutation = api.document.create.useMutation({
@@ -243,6 +255,7 @@ export function DocumentFormModal({
         }
       }
       setIsUploading(false);
+      toast.success("Documento criado com sucesso!");
       data.onSuccess();
       onClose();
     },
@@ -330,6 +343,7 @@ export function DocumentFormModal({
         establishmentId: values.establishmentId,
         responsibleId: values.responsibleId,
         chiefId: values.chiefId || undefined,
+        socialReasonId: values.socialReasonId || null,
         issueDate: values.issueDate || undefined,
         expirationDate: values.expirationDate || undefined,
         alertDate: values.alertDate || undefined,
@@ -351,6 +365,7 @@ export function DocumentFormModal({
         establishmentId: values.establishmentId,
         responsibleId: values.responsibleId,
         chiefId: values.chiefId || undefined,
+        socialReasonId: values.socialReasonId || undefined,
         issueDate: values.issueDate || undefined,
         expirationDate: values.expirationDate || undefined,
         alertDate: values.alertDate || undefined,
@@ -397,6 +412,7 @@ export function DocumentFormModal({
       ) : (
         <Form {...form}>
           <form
+            key={existingDocument?.id ?? "new"}
             onSubmit={form.handleSubmit(handleSubmit, (errors) => {
               const first = Object.values(errors).find((e) => e?.message);
               toast.error((first as any)?.message ?? "Verifique os campos obrigatórios.");
@@ -647,6 +663,37 @@ export function DocumentFormModal({
                             </SelectItem>
                           ))
                         )}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 gap-4">
+              <FormField
+                control={form.control}
+                name="socialReasonId"
+                render={({ field }) => (
+                  <FormItem className="flex-1 w-full">
+                    <FormLabel>Razão Social <span className="text-muted-foreground font-normal">(opcional)</span></FormLabel>
+                    <Select
+                      onValueChange={(value) => field.onChange(value === "none" ? "" : value)}
+                      value={field.value || "none"}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Selecione a razão social" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="none">Nenhuma</SelectItem>
+                        {socialReasons.map((sr: any) => (
+                          <SelectItem key={sr.id} value={sr.id}>
+                            {sr.name}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <FormMessage />

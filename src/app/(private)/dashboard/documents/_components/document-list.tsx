@@ -35,6 +35,8 @@ export type SavedDocument = {
   responsibleName: string;
   responsibleEmail?: string;
   companyName: string;
+  socialReasonId?: string;
+  socialReasonName?: string;
   establishmentName: string;
   observations?: string;
   customData?: Record<string, any>;
@@ -285,6 +287,16 @@ export function DocumentList({ documents, groupBy = "none", onEditDocument }: Do
                 {doc.companyName}
               </span>
             </div>
+
+            {doc.socialReasonName && (
+              <div className="flex flex-col gap-1">
+                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Building2 className="h-3 w-3" />
+                  Razão social
+                </span>
+                <span className="text-sm font-medium truncate">{doc.socialReasonName}</span>
+              </div>
+            )}
           </div>
 
           {doc.observations && (

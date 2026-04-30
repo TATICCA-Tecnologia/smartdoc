@@ -3,7 +3,7 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Badge, Button } from "@/src/shared/components/global/ui";
 import { DataTableColumnHeader } from "@/src/shared/components/global/datatable/data-table-column-header";
-import { Pencil } from "lucide-react";
+import { Pencil, FileText } from "lucide-react";
 
 export type SocialReasonTableData = {
   id: string;
@@ -62,7 +62,15 @@ export function getSocialReasonColumns(onEdit: (reason: SocialReasonTableData) =
       cell: ({ row }) => {
         const reason = row.original;
         return (
-          <div className="flex justify-center">
+          <div className="flex justify-center gap-1">
+            <a
+              href={`/dashboard/documents?socialReasonId=${reason.id}`}
+              title="Ver documentos desta razão social"
+            >
+              <Button type="button" variant="ghost" size="icon" className="h-8 w-8">
+                <FileText className="h-4 w-4" />
+              </Button>
+            </a>
             <Button
               type="button"
               variant="ghost"

@@ -12,6 +12,7 @@ const createDocumentSchema = z.object({
   establishmentId: z.string(),
   responsibleId: z.string(),
   chiefId: z.string().optional(),
+  socialReasonId: z.string().optional().nullable(),
   issueDate: z.string().optional(),
   expirationDate: z.string().optional(),
   alertDate: z.string().optional(),
@@ -40,10 +41,11 @@ export const documentRouter = router({
         companyId: z.string().optional(),
         establishmentId: z.string().optional(),
         organizationId: z.string().optional(),
+        socialReasonId: z.string().optional(),
       })
     )
     .query(async ({ ctx, input }) => {
-      const { page, pageSize, search, status, templateId, companyId, establishmentId, organizationId } = input;
+      const { page, pageSize, search, status, templateId, companyId, establishmentId, organizationId, socialReasonId } = input;
       const skip = (page - 1) * pageSize;
 
       let companyFilter: Prisma.DocumentWhereInput = {};
@@ -69,6 +71,7 @@ export const documentRouter = router({
         ...companyFilter,
         ...(establishmentId && { establishmentId }),
         ...(organizationId && { organizationId }),
+        ...(socialReasonId && { socialReasonId }),
       };
 
       const [documents, total] = await Promise.all([
@@ -139,6 +142,13 @@ export const documentRouter = router({
                 fileSize: true,
               },
             },
+            socialReason: {
+              select: {
+                id: true,
+                name: true,
+                shortName: true,
+              },
+            },
           },
         }),
         ctx.prisma.document.count({ where }),
@@ -184,6 +194,9 @@ export const documentRouter = router({
               name: true,
               description: true,
             },
+          },
+          socialReason: {
+            select: { id: true, name: true, shortName: true },
           },
           attachments: true,
         },
@@ -307,6 +320,9 @@ export const documentRouter = router({
               description: true,
             },
           },
+          socialReason: {
+            select: { id: true, name: true, shortName: true },
+          },
         },
       });
 
@@ -326,6 +342,7 @@ export const documentRouter = router({
       if (data.establishmentId !== undefined) updateData.establishmentId = data.establishmentId;
       if (data.responsibleId !== undefined) updateData.responsibleId = data.responsibleId;
       if (data.chiefId !== undefined) updateData.chiefId = data.chiefId;
+      if (data.socialReasonId !== undefined) updateData.socialReasonId = data.socialReasonId ?? null;
       if (data.classification !== undefined) updateData.classification = data.classification;
       if (data.groupId !== undefined) {
         updateData.groupId = data.groupId;
@@ -381,6 +398,9 @@ export const documentRouter = router({
               name: true,
               description: true,
             },
+          },
+          socialReason: {
+            select: { id: true, name: true, shortName: true },
           },
         },
       });

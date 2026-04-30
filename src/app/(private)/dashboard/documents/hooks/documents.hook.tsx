@@ -8,20 +8,32 @@ import type { SavedDocument } from "../_components/document-list";
 import { api } from "@/src/shared/context/trpc-context";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
+const PAGE_SIZE = 20;
+
 export function useDocumentsPage() {
   const { openModal } = useModal();
   const { scope, setScope, selectedCompany, companyIdForQuery } = useCompanyScopeFilter();
-  const [searchQuery, setSearchQuery] = useState("");
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
   const establishmentIdFilter = searchParams.get("establishmentId") || undefined;
+  const socialReasonIdFilter = searchParams.get("socialReasonId") || undefined;
+  const initialSearchQuery = searchParams.get("q") || "";
+  const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
+  const [page, setPage] = useState(1);
+
+  // Reset to page 1 whenever any filter changes
+  const setSearchQueryAndReset = useCallback((q: string) => {
+    setSearchQuery(q);
+    setPage(1);
+  }, []);
 
   const { data: documentsData, isLoading, error, refetch } = api.document.list.useQuery({
-    page: 1,
-    pageSize: 100,
+    page,
+    pageSize: PAGE_SIZE,
     ...(companyIdForQuery ? { companyId: companyIdForQuery } : {}),
     ...(establishmentIdFilter ? { establishmentId: establishmentIdFilter } : {}),
+    ...(socialReasonIdFilter ? { socialReasonId: socialReasonIdFilter } : {}),
   });
 
   const documents = documentsData?.documents || [];
@@ -35,6 +47,8 @@ export function useDocumentsPage() {
     orgaoId: doc.organization?.id || "",
     orgaoName: doc.organization?.shortName || "",
     companyName: doc.company?.name || "",
+    socialReasonId: doc.socialReason?.id || undefined,
+    socialReasonName: doc.socialReason?.name || "",
     establishmentName: doc.establishment?.name || "",
     responsibleName: doc.responsible?.name || "",
     responsibleEmail: doc.responsible?.email || undefined,
@@ -107,9 +121,16 @@ export function useDocumentsPage() {
     );
   }, [openModal, refetch]);
 
-  const clearEstablishmentFilter = useCallback(() => {
+  const clearFilter = useCallback(() => {
     router.replace(pathname);
   }, [pathname, router]);
+
+  const socialReasonFilterName = useMemo(() => {
+    if (!socialReasonIdFilter) return undefined;
+    return mappedDocuments.find((d: any) => d.socialReasonId === socialReasonIdFilter)?.socialReasonName;
+  }, [socialReasonIdFilter, mappedDocuments]);
+
+  const pagination = documentsData?.pagination;
 
   return {
     documents: filteredDocuments,
@@ -117,14 +138,20 @@ export function useDocumentsPage() {
     error,
     refetch,
     searchQuery,
-    setSearchQuery,
+    setSearchQuery: setSearchQueryAndReset,
+    page,
+    setPage,
+    totalPages: pagination?.totalPages ?? 1,
+    total: pagination?.total ?? 0,
     handleOpenNewDocument,
     handleEditDocument,
     scope,
     setScope,
     selectedCompany,
     establishmentIdFilter,
-    clearEstablishmentFilter,
+    socialReasonIdFilter,
+    socialReasonFilterName,
+    clearFilter,
   };
 }
 
